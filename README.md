@@ -50,3 +50,23 @@ Then run the test suite:
 ```bash
 pytest
 ```
+
+## MCP client configuration
+
+If your MCP client supports automatic server installation, add the following JSON
+to your `mcp.json` file. The client will clone this repository and launch the
+server for you:
+
+```json
+{
+  "repos": ["https://github.com/example/fast-flights-mcp"],
+  "mcpServers": {
+    "fast-flights-mcp": {
+      "command": "fast-flights-mcp",
+      "env": {}
+    }
+  }
+}
+```
+
+Replace the repo URL with your fork if you wish to make local changes.
