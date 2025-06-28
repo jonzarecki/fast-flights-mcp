@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 from fastmcp import FastMCP
+from fastmcp.contrib.bulk_tool_caller import BulkToolCaller
 from fast_flights import (
     search_airport,
     get_flights,
@@ -14,6 +15,10 @@ from fast_flights import (
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP("fast-flights-mcp", dependencies=["fast-flights"])
+
+# Register bulk tool calling utilities
+_bulk_tools = BulkToolCaller()
+_bulk_tools.register_tools(mcp)
 
 
 @mcp.tool()
