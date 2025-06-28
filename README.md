@@ -37,8 +37,7 @@ The server exposes two tools:
 - `search_airports(query)`: search for airport codes by name
 - `search_flights(...)`: search for one‑way or round‑trip flights
 
-With FastMCP 2.9+ you can batch tool calls for efficiency using
-`call_tools_bulk` or `call_tool_bulk` from this package.
+With FastMCP 2.9+ you can batch tool calls for efficiency using `call_tools_bulk` or `call_tool_bulk` from this package.
 
 See the docstrings in `fast_flights_mcp.server` for full parameter details.
 
