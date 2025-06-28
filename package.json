@@ -1,0 +1,11 @@
+{
+  "name": "fast-flights-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "bin": {
+    "fast-flights-mcp": "./index.js"
+  },
+  "scripts": {
+    "postinstall": "pip install git+https://github.com/jonzarecki/fast-flights-mcp"
+  }
+}
