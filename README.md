@@ -1,6 +1,6 @@
 # Fast Flights MCP
 
-[![CI](https://github.com/example/fast-flights-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/example/fast-flights-mcp/actions/workflows/ci.yml)
+[![CI](https://github.com/jonzarecki/fast-flights-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/jonzarecki/fast-flights-mcp/actions/workflows/ci.yml)
 
 A Model Context Protocol (MCP) server that exposes the [fast-flights](https://pypi.org/project/fast-flights/) search library.  It provides tools for searching airports and retrieving flight information in a way that works well with Claude or other MCP clients.
 
