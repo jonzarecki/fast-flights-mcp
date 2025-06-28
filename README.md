@@ -7,7 +7,13 @@ A Model Context Protocol (MCP) server that exposes the [fast-flights](https://py
 ## Installation
 
 ```bash
-pip install fast-flights-mcp
+pip install git+https://github.com/jonzarecki/fast-flights-mcp
+```
+
+You can also run the server via `npx` without installing it system-wide:
+
+```bash
+npx --yes github:jonzarecki/fast-flights-mcp
 ```
 
 or clone the repository and install in editable mode:
@@ -64,15 +70,14 @@ pytest --cov=fast_flights_mcp --cov-report=term-missing
 ## MCP client configuration
 
 If your MCP client supports automatic server installation, add the following JSON
-to your `mcp.json` file. The client will clone this repository and launch the
-server for you:
+to your `mcp.json` file. The client will fetch the package via `npx` and launch
+the server for you:
 
 ```json
 {
-  "repos": ["https://github.com/example/fast-flights-mcp"],
   "mcpServers": {
     "fast-flights-mcp": {
-      "command": "fast-flights-mcp",
+      "command": "npx --yes github:jonzarecki/fast-flights-mcp",
       "env": {}
     }
   }
