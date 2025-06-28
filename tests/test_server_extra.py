@@ -13,8 +13,6 @@ def test_search_airports_no_results(monkeypatch):
 
 
 def test_search_flights_roundtrip_missing_return(monkeypatch):
-    monkeypatch.setattr(
-        "fast_flights_mcp.server.get_flights", lambda **kw: None
-    )
+    monkeypatch.setattr("fast_flights_mcp.server.get_flights", lambda **kw: None)
     with pytest.raises(ValueError):
         search_flights.fn("SFO", "LAX", "2025-01-01", trip="round-trip")
