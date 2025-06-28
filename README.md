@@ -33,7 +33,8 @@ See the docstrings in `fast_flights_mcp.server` for full parameter details.
 
 ## Development
 
-Contributions are welcome!  After cloning the repository run:
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed
+instructions. After cloning the repository run:
 
 ```bash
 pip install -e .[test]
@@ -70,3 +71,7 @@ server for you:
 ```
 
 Replace the repo URL with your fork if you wish to make local changes.
+
+## Code of Conduct
+
+Please review our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
