@@ -1,5 +1,7 @@
 # Fast Flights MCP
 
+[![CI](https://github.com/example/fast-flights-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/example/fast-flights-mcp/actions/workflows/ci.yml)
+
 A Model Context Protocol (MCP) server that exposes the [fast-flights](https://pypi.org/project/fast-flights/) search library.  It provides tools for searching airports and retrieving flight information in a way that works well with Claude or other MCP clients.
 
 ## Installation
@@ -31,9 +33,17 @@ The server exposes two tools:
 
 See the docstrings in `fast_flights_mcp.server` for full parameter details.
 
+For more examples see [docs/examples.md](docs/examples.md). A quick Python usage
+snippet:
+
+```python
+from fast_flights_mcp import search_airports
+print(search_airports.fn("san"))
+```
+
 ## Development
 
-Contributions are welcome!  After cloning the repository run:
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details. After cloning the repository run:
 
 ```bash
 pip install -e .[test]
@@ -45,10 +55,10 @@ Install the pre-commit hooks as well:
 pre-commit install
 ```
 
-Then run the test suite:
+Then run the test suite with coverage:
 
 ```bash
-pytest
+pytest --cov=fast_flights_mcp --cov-report=term-missing
 ```
 
 ## MCP client configuration
