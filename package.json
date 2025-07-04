@@ -6,6 +6,6 @@
     "fast-flights-mcp": "./index.js"
   },
   "scripts": {
-    "postinstall": "pip install git+https://github.com/jonzarecki/fast-flights-mcp"
+    "postinstall": "pip install --user ."
   }
 }
