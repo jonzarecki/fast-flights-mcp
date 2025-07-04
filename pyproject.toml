@@ -27,6 +27,9 @@ fast-flights-mcp = "fast_flights_mcp.server:main"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-vv"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 
 [build-system]
 requires = ["hatchling"]
