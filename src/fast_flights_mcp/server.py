@@ -26,7 +26,8 @@ def search_airports(query: str) -> str:
     """Return a list of airports matching ``query``."""
     query = query.lower()
     matches = [
-        a for a in search_airport("")
+        a
+        for a in search_airport("")
         if query in a.name.lower() or query in a.value.lower()
     ]
     if not matches:
@@ -35,6 +36,8 @@ def search_airports(query: str) -> str:
     if len(matches) > 20:
         lines.append(f"...and {len(matches) - 20} more results")
     return "\n".join(lines)
+
+
 search_airports_unwrapped = search_airports
 
 
@@ -119,6 +122,8 @@ def search_flights(
         return "No flights found."
 
     return str(result)
+
+
 search_flights_unwrapped = search_flights
 
 

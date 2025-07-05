@@ -20,19 +20,24 @@ def test_real_airport_search():
     assert isinstance(result, str)
     assert len(result) > 0
     assert "SFO" in result or "San Francisco" in result
-    
+
     # Test searching for Los Angeles
     result = search_airports.fn("los angeles")
     assert isinstance(result, str)
     assert len(result) > 0
     assert "LAX" in result or "Los Angeles" in result
-    
+
     # Test searching for New York
     result = search_airports.fn("new york")
     assert isinstance(result, str)
     assert len(result) > 0
-    assert ("JFK" in result or "LGA" in result or "EWR" in result or 
-            "New York" in result or "York" in result)
+    assert (
+        "JFK" in result
+        or "LGA" in result
+        or "EWR" in result
+        or "New York" in result
+        or "York" in result
+    )
 
 
 def test_real_airport_search_with_abbreviations():
@@ -44,7 +49,7 @@ def test_real_airport_search_with_abbreviations():
         ("jfk", "JFK"),
         ("ord", "ORD"),
     ]
-    
+
     for query, expected_code in test_cases:
         result = search_airports.fn(query)
         assert isinstance(result, str)
@@ -57,10 +62,10 @@ def test_real_flight_search():
     # Note: This test might be slower as it makes real API calls
     # Use a future date to ensure availability
     from datetime import datetime, timedelta
-    
+
     # Get a date about 30 days from now
     future_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
-    
+
     try:
         # Test a common domestic route
         result = search_flights.fn(
@@ -68,18 +73,18 @@ def test_real_flight_search():
             to_airport="LAX",
             date=future_date,
             trip="one-way",
-            adults=1
+            adults=1,
         )
-        
+
         assert isinstance(result, str)
         assert len(result) > 0
-        
+
         # Check that the result contains expected flight information
         # It should have some basic flight data structure
         assert "->" in result or "No flights found" in result
-        
+
         print(f"Flight search result: {result}")
-        
+
     except Exception as e:
         # If the flight search fails due to API issues, that's ok for this test
         # We just want to make sure our integration doesn't crash
@@ -90,9 +95,9 @@ def test_real_flight_search():
 def test_real_flight_search_with_parameters():
     """Test flight search with various parameters."""
     from datetime import datetime, timedelta
-    
+
     future_date = (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d")
-    
+
     try:
         # Test with different parameters
         result = search_flights.fn(
@@ -103,12 +108,12 @@ def test_real_flight_search_with_parameters():
             adults=2,
             children=1,
             seat="economy",
-            max_stops=1
+            max_stops=1,
         )
-        
+
         assert isinstance(result, str)
         print(f"Flight search with parameters result: {result}")
-        
+
     except Exception as e:
         print(f"Flight search with parameters failed (this might be expected): {e}")
         assert True
@@ -118,10 +123,10 @@ def test_real_flight_search_with_parameters():
 def test_real_round_trip_flight_search():
     """Test round-trip flight search."""
     from datetime import datetime, timedelta
-    
+
     departure_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
     return_date = (datetime.now() + timedelta(days=37)).strftime("%Y-%m-%d")
-    
+
     try:
         result = search_flights.fn(
             from_airport="SFO",
@@ -129,12 +134,12 @@ def test_real_round_trip_flight_search():
             date=departure_date,
             trip="round-trip",
             return_date=return_date,
-            adults=1
+            adults=1,
         )
-        
+
         assert isinstance(result, str)
         print(f"Round-trip flight search result: {result}")
-        
+
     except Exception as e:
         print(f"Round-trip flight search failed (this might be expected): {e}")
         assert True
@@ -155,11 +160,11 @@ def test_invalid_flight_search():
             from_airport="INVALID",
             to_airport="ALSOINVALID",
             date="2025-01-01",
-            trip="one-way"
+            trip="one-way",
         )
         assert isinstance(result, str)
         print(f"Invalid flight search result: {result}")
-        
+
     except Exception as e:
         # This is expected to fail, but shouldn't crash the server
         print(f"Invalid flight search failed as expected: {e}")
@@ -171,9 +176,9 @@ if __name__ == "__main__":
     print("Testing real airport search...")
     test_real_airport_search()
     print("✓ Airport search works!")
-    
+
     print("\nTesting real flight search...")
     test_real_flight_search()
     print("✓ Flight search works!")
-    
-    print("\nAll integration tests passed!") 
+
+    print("\nAll integration tests passed!")
