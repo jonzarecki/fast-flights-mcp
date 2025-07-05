@@ -182,7 +182,6 @@ def find_flights(
     from_date: str,
     return_date: str | None = None,
     adults: int = 1,
-    children: int = 0,
     seat: str = "economy",
     trip: str = "round-trip",
     max_stops: int = 1,
@@ -236,7 +235,7 @@ def find_flights(
                 flight_data=flight_data_list,
                 trip=trip,
                 seat=seat,
-                passengers=Passengers(adults=adults, children=children, infants_in_seat=0, infants_on_lap=0),
+                passengers=Passengers(adults=adults, children=0, infants_in_seat=0, infants_on_lap=0),
                 fetch_mode="common",
             )
             logging.info(f"Successfully fetched flights on attempt {attempt + 1}.")
