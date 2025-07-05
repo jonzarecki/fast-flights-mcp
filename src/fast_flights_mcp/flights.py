@@ -4,15 +4,11 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Optional
 
 import moneyed
 import requests
-from fast_flights import Flight as RawFlight
-from fast_flights import FlightData
-from fast_flights import Passengers
+from fast_flights import FlightData, Passengers, get_flights, search_airport
 from fast_flights import Result as RawResult
-from fast_flights import get_flights, search_airport
 from moneyed import CURRENCIES, Money
 
 
@@ -24,10 +20,10 @@ class FlightInfo:
     name: str
     departure: datetime
     arrival: datetime
-    duration_minutes: Optional[int]
+    duration_minutes: int | None
     stops: int
-    price: Optional[Money]
-    delay_minutes: Optional[int]
+    price: Money | None
+    delay_minutes: int | None
 
 
 @dataclass
@@ -35,20 +31,18 @@ class FlightResults:
     """A dataclass to hold the final list of processed and filtered flights."""
 
     current_price_indicator: str
-    flights: List[FlightInfo]
+    flights: list[FlightInfo]
 
 
 SUPPORTED_CURRENCIES = {"USD", "EUR", "ILS"}
 
 
-def get_exchange_rate(from_currency: str, to_currency: str) -> Optional[float]:
+def get_exchange_rate(from_currency: str, to_currency: str) -> float | None:
     """Fetches the exchange rate between two currencies."""
     if from_currency == to_currency:
         return 1.0
     try:
-        response = requests.get(
-            f"https://api.frankfurter.app/latest?from={from_currency}&to={to_currency}"
-        )
+        response = requests.get(f"https://api.frankfurter.app/latest?from={from_currency}&to={to_currency}")
         response.raise_for_status()
         data = response.json()
         return data["rates"][to_currency]
@@ -57,7 +51,7 @@ def get_exchange_rate(from_currency: str, to_currency: str) -> Optional[float]:
         return None
 
 
-def _parse_price(price_str: str) -> Optional[Money]:
+def _parse_price(price_str: str) -> Money | None:
     """Parses a price string like '₪908' into a Money object."""
     if not price_str:
         return None
@@ -77,7 +71,7 @@ def _parse_price(price_str: str) -> Optional[Money]:
     return moneyed.Money(amount=Decimal(amount_str), currency=currency_code)
 
 
-def _parse_duration(duration_str: Optional[str]) -> Optional[int]:
+def _parse_duration(duration_str: str | None) -> int | None:
     """Parses a duration string like '6 hr 14 min' into total minutes."""
     if not duration_str:
         return None
@@ -104,9 +98,7 @@ def _parse_datetime(dt_str: str, reference_date: datetime.date) -> datetime:
     return datetime.strptime(f"{full_date_str} {time_str}", "%a, %b %d, %Y %I:%M %p")
 
 
-def parse_flight_results(
-    raw_result: RawResult, departure_date: datetime.date
-) -> FlightResults:
+def parse_flight_results(raw_result: RawResult, departure_date: datetime.date) -> FlightResults:
     """Converts a raw Result object from fast_flights into a structured FlightResults dataclass."""
     if not raw_result or not raw_result.flights:
         return FlightResults(current_price_indicator="unknown", flights=[])
@@ -132,35 +124,29 @@ def parse_flight_results(
             )
             parsed_flights.append(flight_info)
         except Exception as e:
-            logging.warning(
-                f"Skipping flight due to parsing error: {e}. Raw data: {raw_flight}"
-            )
+            logging.warning(f"Skipping flight due to parsing error: {e}. Raw data: {raw_flight}")
             continue
 
-    return FlightResults(
-        current_price_indicator=raw_result.current_price, flights=parsed_flights
-    )
+    return FlightResults(current_price_indicator=raw_result.current_price, flights=parsed_flights)
 
 
 def find_flights(
     from_airport: str,
     to_airport: str,
     from_date: str,
-    return_date: Optional[str] = None,
+    return_date: str | None = None,
     adults: int = 1,
     seat: str = "economy",
     trip: str = "round-trip",
     max_stops: int = 1,
-    max_price: Optional[int] = None,
-    max_flight_duration_minutes: Optional[int] = None,
-    latest_arrival_time: Optional[str] = None,
-    max_delay_minutes: Optional[int] = None,
-    target_currency: Optional[str] = None,
+    max_price: int | None = None,
+    max_flight_duration_minutes: int | None = None,
+    latest_arrival_time: str | None = None,
+    max_delay_minutes: int | None = None,
+    target_currency: str | None = None,
 ):
     if target_currency and target_currency.upper() not in SUPPORTED_CURRENCIES:
-        raise ValueError(
-            f"Unsupported target currency: {target_currency}. Supported currencies are {SUPPORTED_CURRENCIES}"
-        )
+        raise ValueError(f"Unsupported target currency: {target_currency}. Supported currencies are {SUPPORTED_CURRENCIES}")
 
     if trip not in ["one-way", "round-trip"]:
         raise ValueError("Trip type must be 'one-way' or 'round-trip'.")
@@ -203,9 +189,7 @@ def find_flights(
                 flight_data=flight_data_list,
                 trip=trip,
                 seat=seat,
-                passengers=Passengers(
-                    adults=adults, children=0, infants_in_seat=0, infants_on_lap=0
-                ),
+                passengers=Passengers(adults=adults, children=0, infants_in_seat=0, infants_on_lap=0),
                 fetch_mode="common",
             )
             logging.info(f"Successfully fetched flights on attempt {attempt + 1}.")
@@ -234,47 +218,33 @@ def find_flights(
                     converted_amount = flight.price.amount * Decimal(str(rate))
                     flight.price = Money(converted_amount, CURRENCIES[target_currency])
                 else:
-                    logging.warning(
-                        f"Could not convert price for flight {flight.name}"
-                    )
+                    logging.warning(f"Could not convert price for flight {flight.name}")
 
     original_flight_count = len(parsed_results.flights)
     filtered_flights = []
 
-    latest_arrival_time_obj = (
-        datetime.strptime(latest_arrival_time, "%H:%M").time()
-        if latest_arrival_time
-        else None
-    )
+    latest_arrival_time_obj = datetime.strptime(latest_arrival_time, "%H:%M").time() if latest_arrival_time else None
 
     for flight in parsed_results.flights:
         if max_price is not None:
             if flight.price:
                 max_price_money = Money(max_price, flight.price.currency)
                 if flight.price > max_price_money:
-                    logging.info(
-                        f"Filtering out flight {flight.name} due to price: {flight.price} > {max_price_money}"
-                    )
+                    logging.info(f"Filtering out flight {flight.name} due to price: {flight.price} > {max_price_money}")
                     continue
             else:
-                logging.info(
-                    f"Filtering out flight {flight.name} due to missing price."
-                )
+                logging.info(f"Filtering out flight {flight.name} due to missing price.")
                 continue
 
         if max_flight_duration_minutes is not None and (
-            flight.duration_minutes is None
-            or flight.duration_minutes > max_flight_duration_minutes
+            flight.duration_minutes is None or flight.duration_minutes > max_flight_duration_minutes
         ):
             logging.info(
                 f"Filtering out flight {flight.name} due to duration: {flight.duration_minutes}m > {max_flight_duration_minutes}m"
             )
             continue
 
-        if (
-            latest_arrival_time_obj is not None
-            and flight.arrival.time() > latest_arrival_time_obj
-        ):
+        if latest_arrival_time_obj is not None and flight.arrival.time() > latest_arrival_time_obj:
             logging.info(
                 f"Filtering out flight {flight.name} due to arrival time: {flight.arrival.time()} > {latest_arrival_time_obj}"
             )
@@ -282,16 +252,12 @@ def find_flights(
 
         if max_delay_minutes is not None and flight.delay_minutes is not None:
             if flight.delay_minutes > max_delay_minutes:
-                logging.info(
-                    f"Filtering out flight {flight.name} due to delay: {flight.delay_minutes}m > {max_delay_minutes}m"
-                )
+                logging.info(f"Filtering out flight {flight.name} due to delay: {flight.delay_minutes}m > {max_delay_minutes}m")
                 continue
 
         filtered_flights.append(flight)
 
-    logging.info(
-        f"Finished filtering flights. Original count: {original_flight_count}, Filtered count: {len(filtered_flights)}"
-    )
+    logging.info(f"Finished filtering flights. Original count: {original_flight_count}, Filtered count: {len(filtered_flights)}")
 
     parsed_results.flights = filtered_flights
     return parsed_results
@@ -300,11 +266,7 @@ def find_flights(
 def search_airports(query: str) -> str:
     """Return a list of airports matching ``query``."""
     query = query.lower()
-    matches = [
-        a
-        for a in search_airport("")
-        if query in a.name.lower() or query in a.value.lower()
-    ]
+    matches = [a for a in search_airport("") if query in a.name.lower() or query in a.value.lower()]
     if not matches:
         return "No airports found"
     lines = [f"{a.name.replace('_', ' ').title()} ({a.value})" for a in matches[:20]]
@@ -339,7 +301,5 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
-    main() 
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    main()

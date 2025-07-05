@@ -7,8 +7,8 @@ from moneyed import Money
 # ensure package can be imported
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from src.fast_flights_mcp.server import search_flights
-from src.fast_flights_mcp.flights import FlightInfo, FlightResults
+from fast_flights_mcp.flights import FlightInfo, FlightResults
+from fast_flights_mcp.server import search_flights
 
 
 def test_search_flights(monkeypatch):
@@ -26,7 +26,7 @@ def test_search_flights(monkeypatch):
         return FlightResults(current_price_indicator="low", flights=[flight])
 
     # Mock the function as imported by the server module
-    monkeypatch.setattr("src.fast_flights_mcp.server.find_flights_impl", fake_find_flights)
+    monkeypatch.setattr("fast_flights_mcp.server.find_flights_impl", fake_find_flights)
 
     # Use a future date
     future_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")

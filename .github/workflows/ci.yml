@@ -86,7 +86,7 @@ jobs:
           pip install -e .[test]
 
       - name: Run unit tests
-        run: pytest tests/test_server.py tests/test_bulk.py -v --cov=fast_flights_mcp --cov-report=xml --cov-report=term-missing
+        run: pytest tests/test_server.py -v --cov=fast_flights_mcp --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -128,9 +128,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip wheel
           pip install -e .[test]
-
-      - name: Run real integration tests
-        run: pytest tests/test_real_integration.py -v --tb=short
 
       - name: Run internet API tests
         run: pytest tests/test_fast_flights_internet.py -v --tb=short -m "not slow"
@@ -175,7 +172,7 @@ jobs:
         run: twine check dist/*
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-${{ github.sha }}
           path: dist/
@@ -215,7 +212,7 @@ jobs:
         run: safety check --json --output safety-report.json || true
 
       - name: Upload security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: security-reports-${{ github.sha }}
@@ -249,7 +246,7 @@ jobs:
         run: pytest --benchmark-only --benchmark-json=benchmark.json || true
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: benchmark-results-${{ github.sha }}

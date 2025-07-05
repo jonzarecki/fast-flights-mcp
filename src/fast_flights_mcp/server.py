@@ -32,7 +32,7 @@ def search_flights(
     # Map max_stops to the expected range (0 or 1)
     if max_stops is None:
         max_stops = 1
-    
+
     result = find_flights_impl(
         from_airport=from_airport,
         to_airport=to_airport,

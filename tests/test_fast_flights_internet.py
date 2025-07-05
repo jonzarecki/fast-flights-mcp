@@ -3,6 +3,7 @@
 Test fast-flights integration with real internet API calls.
 This test makes actual HTTP requests to verify the integration works end-to-end.
 """
+
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -132,20 +133,13 @@ class TestFastFlightsInternet:
             # Should handle errors gracefully (not crash)
             assert isinstance(result, str)
             # Should indicate no flights found or contain error info
-            assert (
-                "No flights found" in result
-                or "error" in result.lower()
-                or len(result) > 0
-            )
+            assert "No flights found" in result or "error" in result.lower() or len(result) > 0
             print(f"✅ Error handling test: {result[:100]}...")
 
         except RuntimeError as e:
             # fast-flights throws RuntimeError for invalid routes
             assert "No flights found" in str(e)
-            print(
-                "✅ Error handling test: "
-                f"Correctly caught RuntimeError - {str(e)[:100]}..."
-            )
+            print(f"✅ Error handling test: Correctly caught RuntimeError - {str(e)[:100]}...")
 
     def test_different_seat_classes_real_api(self):
         """Test real API calls with different seat classes."""
@@ -200,9 +194,7 @@ class TestFastFlightsInternet:
             assert len(price_line) > 0
 
             # Should have numbered flight options
-            flight_lines = [
-                line for line in lines if line.strip().startswith(("1.", "2.", "3."))
-            ]
+            flight_lines = [line for line in lines if line.strip().startswith(("1.", "2.", "3."))]
             assert len(flight_lines) > 0
 
             # Each flight line should have basic info
