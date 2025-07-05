@@ -63,14 +63,17 @@ class FlightResults:
             stops_str = "nonstop" if flight.stops == 0 else f"{flight.stops} stop{'s' if flight.stops > 1 else ''}"
 
             # Format price
-            price_str = str(flight.price) if flight.price else "Price unavailable"
+            if flight.price:
+                # Format price with regular space instead of non-breaking space
+                price_str = str(flight.price).replace("\xa0", " ")
+            else:
+                price_str = "Price unavailable"
 
             # Best flight indicator
             best_indicator = " ⭐" if flight.is_best else ""
 
             line = (
-                f"{i}. {flight.name}{best_indicator} - {departure_str} -> {arrival_str}{duration_str}, "
-                f"{stops_str}, {price_str}"
+                f"{i}. {flight.name}{best_indicator} - {departure_str} -> {arrival_str}{duration_str}, {stops_str}, {price_str}"
             )
             lines.append(line)
 

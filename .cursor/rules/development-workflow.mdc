@@ -1,0 +1,279 @@
+---
+alwaysApply: true
+---
+
+# Development Workflow Rules
+
+This file contains mandatory rules for all code changes in the fast-flights-mcp project.
+
+## 🚨 MANDATORY PRE-COMMIT WORKFLOW
+
+### Before ANY code changes:
+1. **ALWAYS run tests first** to ensure current state is working
+2. **ALWAYS run pre-commit hooks** before committing
+3. **ALWAYS verify linting passes** before submitting code
+
+### Required Commands (run in this order):
+
+```bash
+# 1. Run all tests to verify current state
+python -m pytest tests/ -v
+
+# 2. Run linting checks
+python -m ruff check src/ tests/
+
+# 3. Run formatting checks (and fix if needed)
+python -m ruff format src/ tests/
+
+# 4. Install/update pre-commit hooks
+pre-commit install
+
+# 5. Run pre-commit on all files
+pre-commit run --all-files
+```
+
+## 📋 CODE CHANGE WORKFLOW
+
+### When making ANY code changes:
+
+1. **Before editing:**
+   - Run full test suite: `python -m pytest tests/ -v`
+   - Ensure all tests pass before proceeding
+
+2. **After making changes:**
+   - Run tests again: `python -m pytest tests/ -v`
+   - Run linting: `python -m ruff check src/ tests/`
+   - Run formatting: `python -m ruff format src/ tests/`
+   - Run pre-commit: `pre-commit run --all-files`
+
+3. **Before committing:**
+   - Verify ALL tests pass
+   - Verify NO linting errors
+   - Verify code is properly formatted
+   - Run `pre-commit run --all-files` one final time
+
+## 🔧 PROJECT-SPECIFIC RULES
+
+### Testing Requirements:
+- **ALL tests must pass** before any commit
+- **Coverage should not decrease** (current baseline: ~35%)
+- **New features MUST include tests**
+- **Bug fixes MUST include regression tests**
+
+### Code Quality:
+- **Ruff linting must pass** with zero errors
+- **Code must be formatted** with ruff
+- **Type hints are required** for all public functions
+- **Docstrings required** for all public functions and classes
+
+### Flight Search Module Specifics:
+- Price formatting must use regular spaces (not non-breaking spaces `\xa0`)
+- All Money objects should be formatted consistently
+- Flight duration formatting: `{hours}h {minutes}m`
+- Date formatting: Use `%I:%M %p` for times, `%Y-%m-%d` for dates
+
+## 🚫 NEVER SKIP THESE STEPS
+
+### Absolutely forbidden:
+- ❌ Committing without running tests
+- ❌ Committing with linting errors
+- ❌ Committing with failing pre-commit hooks
+- ❌ Pushing code that breaks the CI pipeline
+- ❌ Modifying test files without running the full test suite
+
+### Emergency procedures:
+If you must commit urgently:
+1. Run at minimum: `python -m pytest tests/test_server.py -v`
+2. Run: `python -m ruff check src/fast_flights_mcp/`
+3. Document the urgency in the commit message
+4. **Promise to run full checks immediately after**
+
+## 📁 FILE STRUCTURE RULES
+
+### When creating new files:
+- Python files go in `src/fast_flights_mcp/`
+- Tests go in `tests/` with `test_` prefix
+- Documentation goes in `docs/`
+- **Always add imports to `__init__.py` when needed**
+
+### When modifying existing files:
+- **Read the ENTIRE file** before making changes
+- **Understand the context** of your changes
+- **Check for dependencies** that might be affected
+- **Update related tests** when changing functionality
+
+## 🔄 CONTINUOUS INTEGRATION
+
+### GitHub Actions must pass:
+- All tests must pass on Linux environment
+- Linting checks must pass
+- Pre-commit hooks must pass
+- **No exceptions** - fix issues immediately
+
+### Local environment matching:
+- Use Python 3.11+ (matching CI)
+- Install all dependencies: `pip install -e .[dev]`
+- Keep pre-commit hooks updated: `pre-commit autoupdate`
+
+## 💡 HELPFUL COMMANDS
+
+### Quick health check:
+```bash
+# Full project health check
+python -m pytest tests/ -v && python -m ruff check src/ tests/ && python -m ruff format --check src/ tests/ && pre-commit run --all-files
+```
+
+### Coverage report:
+```bash
+python -m pytest tests/ --cov=fast_flights_mcp --cov-report=term-missing
+```
+
+### Debugging test failures:
+```bash
+# Run with verbose output and stop on first failure
+python -m pytest tests/ -v -x
+
+# Run specific test with debug output
+python -m pytest tests/test_server.py::test_search_flights -v -s
+```
+
+---
+
+**Remember: These rules exist to maintain code quality and prevent CI failures. Following them saves time for everyone!** # Development Workflow Rules
+
+This file contains mandatory rules for all code changes in the fast-flights-mcp project.
+
+## 🚨 MANDATORY PRE-COMMIT WORKFLOW
+
+### Before ANY code changes:
+1. **ALWAYS run tests first** to ensure current state is working
+2. **ALWAYS run pre-commit hooks** before committing
+3. **ALWAYS verify linting passes** before submitting code
+
+### Required Commands (run in this order):
+
+```bash
+# 1. Run all tests to verify current state
+python -m pytest tests/ -v
+
+# 2. Run linting checks
+python -m ruff check src/ tests/
+
+# 3. Run formatting checks (and fix if needed)
+python -m ruff format src/ tests/
+
+# 4. Install/update pre-commit hooks
+pre-commit install
+
+# 5. Run pre-commit on all files
+pre-commit run --all-files
+```
+
+## 📋 CODE CHANGE WORKFLOW
+
+### When making ANY code changes:
+
+1. **Before editing:**
+   - Run full test suite: `python -m pytest tests/ -v`
+   - Ensure all tests pass before proceeding
+
+2. **After making changes:**
+   - Run tests again: `python -m pytest tests/ -v`
+   - Run linting: `python -m ruff check src/ tests/`
+   - Run formatting: `python -m ruff format src/ tests/`
+   - Run pre-commit: `pre-commit run --all-files`
+
+3. **Before committing:**
+   - Verify ALL tests pass
+   - Verify NO linting errors
+   - Verify code is properly formatted
+   - Run `pre-commit run --all-files` one final time
+
+## 🔧 PROJECT-SPECIFIC RULES
+
+### Testing Requirements:
+- **ALL tests must pass** before any commit
+- **Coverage should not decrease** (current baseline: ~35%)
+- **New features MUST include tests**
+- **Bug fixes MUST include regression tests**
+
+### Code Quality:
+- **Ruff linting must pass** with zero errors
+- **Code must be formatted** with ruff
+- **Type hints are required** for all public functions
+- **Docstrings required** for all public functions and classes
+
+### Flight Search Module Specifics:
+- Price formatting must use regular spaces (not non-breaking spaces `\xa0`)
+- All Money objects should be formatted consistently
+- Flight duration formatting: `{hours}h {minutes}m`
+- Date formatting: Use `%I:%M %p` for times, `%Y-%m-%d` for dates
+
+## 🚫 NEVER SKIP THESE STEPS
+
+### Absolutely forbidden:
+- ❌ Committing without running tests
+- ❌ Committing with linting errors
+- ❌ Committing with failing pre-commit hooks
+- ❌ Pushing code that breaks the CI pipeline
+- ❌ Modifying test files without running the full test suite
+
+### Emergency procedures:
+If you must commit urgently:
+1. Run at minimum: `python -m pytest tests/test_server.py -v`
+2. Run: `python -m ruff check src/fast_flights_mcp/`
+3. Document the urgency in the commit message
+4. **Promise to run full checks immediately after**
+
+## 📁 FILE STRUCTURE RULES
+
+### When creating new files:
+- Python files go in `src/fast_flights_mcp/`
+- Tests go in `tests/` with `test_` prefix
+- Documentation goes in `docs/`
+- **Always add imports to `__init__.py` when needed**
+
+### When modifying existing files:
+- **Read the ENTIRE file** before making changes
+- **Understand the context** of your changes
+- **Check for dependencies** that might be affected
+- **Update related tests** when changing functionality
+
+## 🔄 CONTINUOUS INTEGRATION
+
+### GitHub Actions must pass:
+- All tests must pass on Linux environment
+- Linting checks must pass
+- Pre-commit hooks must pass
+- **No exceptions** - fix issues immediately
+
+### Local environment matching:
+- Use Python 3.11+ (matching CI)
+- Install all dependencies: `pip install -e .[dev]`
+- Keep pre-commit hooks updated: `pre-commit autoupdate`
+
+## 💡 HELPFUL COMMANDS
+
+### Quick health check:
+```bash
+# Full project health check
+python -m pytest tests/ -v && python -m ruff check src/ tests/ && python -m ruff format --check src/ tests/ && pre-commit run --all-files
+```
+
+### Coverage report:
+```bash
+python -m pytest tests/ --cov=fast_flights_mcp --cov-report=term-missing
+```
+
+### Debugging test failures:
+```bash
+# Run with verbose output and stop on first failure
+python -m pytest tests/ -v -x
+
+# Run specific test with debug output
+python -m pytest tests/test_server.py::test_search_flights -v -s
+```
+
+---
+
+**Remember: These rules exist to maintain code quality and prevent CI failures. Following them saves time for everyone!** 
