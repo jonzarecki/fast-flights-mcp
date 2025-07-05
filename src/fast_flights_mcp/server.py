@@ -24,13 +24,18 @@ _bulk_tools.register_tools(mcp)
 @mcp.tool()
 def search_airports(query: str) -> str:
     """Return a list of airports matching ``query``."""
-    matches = search_airport(query)
+    query = query.lower()
+    matches = [
+        a for a in search_airport("")
+        if query in a.name.lower() or query in a.value.lower()
+    ]
     if not matches:
         return "No airports found"
     lines = [f"{a.name.replace('_', ' ').title()} ({a.value})" for a in matches[:20]]
     if len(matches) > 20:
         lines.append(f"...and {len(matches) - 20} more results")
     return "\n".join(lines)
+search_airports_unwrapped = search_airports
 
 
 @mcp.resource("flights://seat-classes")
@@ -77,11 +82,21 @@ def search_flights(
     if trip == "round-trip" and not return_date:
         raise ValueError("return_date required for round-trip")
 
-    flights = [FlightData(date=date, from_airport=from_airport, to_airport=to_airport)]
+    flight_data = [
+        FlightData(
+            date=date,
+            from_airport=from_airport,
+            to_airport=to_airport,
+            max_stops=max_stops,
+        )
+    ]
     if trip == "round-trip" and return_date:
-        flights.append(
+        flight_data.append(
             FlightData(
-                date=return_date, from_airport=to_airport, to_airport=from_airport
+                date=return_date,
+                from_airport=to_airport,
+                to_airport=from_airport,
+                max_stops=max_stops,
             )
         )
 
@@ -93,29 +108,18 @@ def search_flights(
     )
 
     result = get_flights(
-        flight_data=flights,
+        flight_data=flight_data,
         trip=trip,
         passengers=passengers,
         seat=seat,
         fetch_mode=fetch_mode,
-        max_stops=max_stops,
     )
 
-    lines = []
-    if hasattr(result, "current_price"):
-        lines.append(f"Price assessment: {result.current_price}")
+    if not result.flights:
+        return "No flights found."
 
-    for i, fl in enumerate(result.flights[:10], 1):
-        best = " [BEST]" if getattr(fl, "is_best", False) else ""
-        airline = f"{fl.name} " if getattr(fl, "name", "") else ""
-        line = (
-            f"{i}. {airline}{fl.departure} -> {fl.arrival} "
-            f"({fl.duration}) {fl.price}{best}"
-        )
-        lines.append(line)
-    if len(result.flights) > 10:
-        lines.append(f"...and {len(result.flights) - 10} more results")
-    return "\n".join(lines)
+    return str(result)
+search_flights_unwrapped = search_flights
 
 
 def main() -> None:

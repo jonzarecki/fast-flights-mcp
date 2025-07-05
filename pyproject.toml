@@ -7,6 +7,7 @@ dependencies = [
     "fast-flights>=2.2",
     "fastmcp",
     "mcp[cli]",
+    "playwright",
 ]
 
 [project.optional-dependencies]
