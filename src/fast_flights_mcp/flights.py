@@ -64,8 +64,8 @@ class FlightResults:
 
             # Format price
             if flight.price:
-                # Format price with regular space instead of non-breaking space
-                price_str = str(flight.price).replace("\xa0", " ")
+                # Format price by removing any spaces (including non-breaking spaces)
+                price_str = str(flight.price).replace("\xa0", "").replace(" ", "")
             else:
                 price_str = "Price unavailable"
 
