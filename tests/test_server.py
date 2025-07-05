@@ -32,4 +32,6 @@ def test_search_flights(monkeypatch):
     future_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
     resp = search_flights.fn("SFO", "LAX", future_date)
     assert "Test Airline" in resp
-    assert "Money('100', 'USD')" in resp
+    assert "$100.00" in resp  # Check for formatted price instead of raw Money object
+    assert "Price assessment:" in resp  # Check for formatted output
+    assert "->" in resp  # Check for flight route format

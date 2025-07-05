@@ -26,6 +26,7 @@ def search_flights(
     return_date: str | None = None,
     seat: str = "economy",
     adults: int = 1,
+    children: int = 0,
     max_stops: int | None = None,
 ) -> str:
     """Search for flights using :mod:`fast_flights`."""
@@ -41,9 +42,8 @@ def search_flights(
         return_date=return_date,
         seat=seat,
         adults=adults,
+        children=children,
         max_stops=max_stops,
-        # Note: children, infants_in_seat, infants_on_lap are ignored for now
-        # as the find_flights_impl doesn't support them yet
     )
 
     if not result or not result.flights:

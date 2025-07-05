@@ -214,10 +214,8 @@ def test_internet_connectivity():
         # Simple connectivity test
         urllib.request.urlopen("https://www.google.com", timeout=5)
         print("✅ Internet connectivity confirmed")
-        return True
     except urllib.error.URLError:
         pytest.skip("No internet connectivity available")
-        return False
 
 
 if __name__ == "__main__":
@@ -226,7 +224,9 @@ if __name__ == "__main__":
     print("=" * 50)
 
     # Check internet connectivity first
-    if not test_internet_connectivity():
+    try:
+        test_internet_connectivity()
+    except SystemExit:
         print("❌ No internet connectivity - skipping tests")
         exit(1)
 

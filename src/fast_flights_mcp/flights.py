@@ -33,6 +33,52 @@ class FlightResults:
     current_price_indicator: str
     flights: list[FlightInfo]
 
+    def __str__(self) -> str:
+        """Return a formatted string representation of the flight results."""
+        if not self.flights:
+            return "No flights found."
+
+        lines = []
+
+        # Add price assessment
+        price_desc = {"low": "Lower than usual", "typical": "Typical prices", "high": "Higher than usual"}.get(
+            self.current_price_indicator, "Unknown price level"
+        )
+        lines.append(f"Price assessment: {price_desc}")
+        lines.append("")
+
+        # Add flights
+        for i, flight in enumerate(self.flights[:10], 1):  # Show max 10 flights
+            departure_str = flight.departure.strftime("%I:%M %p")
+            arrival_str = flight.arrival.strftime("%I:%M %p")
+
+            # Format duration
+            duration_str = ""
+            if flight.duration_minutes:
+                hours = flight.duration_minutes // 60
+                minutes = flight.duration_minutes % 60
+                duration_str = f" ({hours}h {minutes}m)"
+
+            # Format stops
+            stops_str = "nonstop" if flight.stops == 0 else f"{flight.stops} stop{'s' if flight.stops > 1 else ''}"
+
+            # Format price
+            price_str = str(flight.price) if flight.price else "Price unavailable"
+
+            # Best flight indicator
+            best_indicator = " ⭐" if flight.is_best else ""
+
+            line = (
+                f"{i}. {flight.name}{best_indicator} - {departure_str} -> {arrival_str}{duration_str}, "
+                f"{stops_str}, {price_str}"
+            )
+            lines.append(line)
+
+        if len(self.flights) > 10:
+            lines.append(f"... and {len(self.flights) - 10} more flights")
+
+        return "\n".join(lines)
+
 
 SUPPORTED_CURRENCIES = {"USD", "EUR", "ILS"}
 
@@ -136,6 +182,7 @@ def find_flights(
     from_date: str,
     return_date: str | None = None,
     adults: int = 1,
+    children: int = 0,
     seat: str = "economy",
     trip: str = "round-trip",
     max_stops: int = 1,
@@ -189,7 +236,7 @@ def find_flights(
                 flight_data=flight_data_list,
                 trip=trip,
                 seat=seat,
-                passengers=Passengers(adults=adults, children=0, infants_in_seat=0, infants_on_lap=0),
+                passengers=Passengers(adults=adults, children=children, infants_in_seat=0, infants_on_lap=0),
                 fetch_mode="common",
             )
             logging.info(f"Successfully fetched flights on attempt {attempt + 1}.")
