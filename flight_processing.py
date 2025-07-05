@@ -8,18 +8,19 @@ import moneyed
 from fast_flights import Flight as RawFlight
 from fast_flights import Result as RawResult
 from moneyed import Money
+from decimal import Decimal
 
-@dataclass(frozen=True)
+@dataclass
 class FlightInfo:
     """A strictly-typed dataclass for processed flight information."""
     is_best: bool
     name: str
     departure: datetime
     arrival: datetime
-    duration: Optional[timedelta]
+    duration_minutes: Optional[int]
     stops: int
     price: Optional[Money]
-    delay: Optional[timedelta]
+    delay_minutes: Optional[int]
 
 @dataclass
 class FlightResults:
@@ -44,20 +45,24 @@ def _parse_price(price_str: str) -> Optional[Money]:
     if not amount_str:
         return None
         
-    return moneyed.Money(amount=float(amount_str), currency=currency_code)
+    return moneyed.Money(amount=Decimal(amount_str), currency=currency_code)
 
-def _parse_duration(duration_str: Optional[str]) -> Optional[timedelta]:
-    """Parses a duration string like '6 hr 14 min' into a timedelta."""
+def _parse_duration(duration_str: Optional[str]) -> Optional[int]:
+    """Parses a duration string like '6 hr 14 min' into total minutes."""
     if not duration_str:
         return None
-    
+
     hours, minutes = 0, 0
-    if 'hr' in duration_str:
-        hours = int(re.search(r'(\d+)\s*hr', duration_str).group(1))
-    if 'min' in duration_str:
-        minutes = int(re.search(r'(\d+)\s*min', duration_str).group(1))
-        
-    return timedelta(hours=hours, minutes=minutes)
+    if "hr" in duration_str:
+        hours_match = re.search(r"(\d+)\s*hr", duration_str)
+        if hours_match:
+            hours = int(hours_match.group(1))
+    if "min" in duration_str:
+        minutes_match = re.search(r"(\d+)\s*min", duration_str)
+        if minutes_match:
+            minutes = int(minutes_match.group(1))
+
+    return hours * 60 + minutes
 
 def _parse_datetime(dt_str: str, reference_date: datetime.date) -> datetime:
     """Parses a flight datetime string like '10:10 PM on Mon, Aug 4' into a datetime object."""
@@ -87,10 +92,10 @@ def parse_flight_results(raw_result: RawResult, departure_date: datetime.date) -
                 name=raw_flight.name,
                 departure=departure_dt,
                 arrival=arrival_dt,
-                duration=_parse_duration(raw_flight.duration),
+                duration_minutes=_parse_duration(raw_flight.duration),
                 stops=raw_flight.stops,
                 price=_parse_price(raw_flight.price),
-                delay=_parse_duration(raw_flight.delay)
+                delay_minutes=_parse_duration(raw_flight.delay)
             )
             parsed_flights.append(flight_info)
         except Exception as e:

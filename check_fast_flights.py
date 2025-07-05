@@ -2,10 +2,27 @@ import logging
 import time
 from datetime import datetime, timedelta
 from typing import Optional
+from decimal import Decimal
 
 from fast_flights import FlightData, Passengers, Result, get_flights
 from flight_processing import parse_flight_results
-from moneyed import Money
+from moneyed import Money, CURRENCIES
+import requests
+
+SUPPORTED_CURRENCIES = {"USD", "EUR", "ILS"}
+
+def get_exchange_rate(from_currency: str, to_currency: str) -> Optional[float]:
+    """Fetches the exchange rate between two currencies."""
+    if from_currency == to_currency:
+        return 1.0
+    try:
+        response = requests.get(f"https://api.frankfurter.app/latest?from={from_currency}&to={to_currency}")
+        response.raise_for_status()
+        data = response.json()
+        return data["rates"][to_currency]
+    except requests.RequestException as e:
+        logging.error(f"Failed to fetch exchange rate: {e}")
+        return None
 
 
 def find_flights(
@@ -18,10 +35,14 @@ def find_flights(
     trip: str = "round-trip",
     max_stops: int = 1,
     max_price: Optional[int] = None,
-    max_flight_duration_hours: Optional[float] = None,
+    max_flight_duration_minutes: Optional[int] = None,
     latest_arrival_time: Optional[str] = None,
     max_delay_minutes: Optional[int] = None,
+    target_currency: Optional[str] = None,
 ):
+    if target_currency and target_currency.upper() not in SUPPORTED_CURRENCIES:
+        raise ValueError(f"Unsupported target currency: {target_currency}. Supported currencies are {SUPPORTED_CURRENCIES}")
+
     if trip not in ["one-way", "round-trip"]:
         raise ValueError("Trip type must be 'one-way' or 'round-trip'.")
 
@@ -86,6 +107,18 @@ def find_flights(
 
     parsed_results = parse_flight_results(raw_result, from_date_obj)
 
+    if target_currency:
+        target_currency = target_currency.upper()
+        logging.info(f"Converting prices to {target_currency}")
+        for flight in parsed_results.flights:
+            if flight.price and flight.price.currency.code != target_currency:
+                rate = get_exchange_rate(flight.price.currency.code, target_currency)
+                if rate:
+                    converted_amount = flight.price.amount * Decimal(str(rate))
+                    flight.price = Money(converted_amount, CURRENCIES[target_currency])
+                else:
+                    logging.warning(f"Could not convert price for flight {flight.name}")
+
     original_flight_count = len(parsed_results.flights)
     filtered_flights = []
 
@@ -110,30 +143,24 @@ def find_flights(
                 )
                 continue
 
-        if max_flight_duration_hours is not None and (
-            flight.duration is None
-            or flight.duration.total_seconds() / 3600 > max_flight_duration_hours
+        if max_flight_duration_minutes is not None and (
+            flight.duration_minutes is None or flight.duration_minutes > max_flight_duration_minutes
         ):
-            duration_hours = flight.duration.total_seconds() / 3600
             logging.info(
-                f"Filtering out flight {flight.name} due to duration: {duration_hours:.2f}h > {max_flight_duration_hours}h"
+                f"Filtering out flight {flight.name} due to duration: {flight.duration_minutes}m > {max_flight_duration_minutes}m"
             )
             continue
 
-        if (
-            latest_arrival_time_obj is not None
-            and flight.arrival.time() > latest_arrival_time_obj
-        ):
+        if latest_arrival_time_obj is not None and flight.arrival.time() > latest_arrival_time_obj:
             logging.info(
                 f"Filtering out flight {flight.name} due to arrival time: {flight.arrival.time()} > {latest_arrival_time_obj}"
             )
             continue
 
-        if max_delay_minutes is not None and flight.delay is not None:
-            delay_minutes = flight.delay.total_seconds() / 60
-            if delay_minutes > max_delay_minutes:
+        if max_delay_minutes is not None and flight.delay_minutes is not None:
+            if flight.delay_minutes > max_delay_minutes:
                 logging.info(
-                    f"Filtering out flight {flight.name} due to delay: {delay_minutes:.2f}m > {max_delay_minutes}m"
+                    f"Filtering out flight {flight.name} due to delay: {flight.delay_minutes}m > {max_delay_minutes}m"
                 )
                 continue
 
@@ -160,9 +187,10 @@ def main():
             return_date=return_date.strftime("%Y-%m-%d"),
             max_stops=1,
             max_price=2000,
-            max_flight_duration_hours=10,
+            max_flight_duration_minutes=600,
             latest_arrival_time="22:00",
             max_delay_minutes=60,
+            target_currency="ILS",
         )
         if result:
             print(result)
