@@ -108,7 +108,6 @@ class TestFastFlightsInternet:
             date=future_date,
             trip="one-way",
             adults=2,
-            children=1,
             seat="economy",
         )
 
