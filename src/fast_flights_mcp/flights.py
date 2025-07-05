@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import moneyed
 import requests
-from fast_flights import FlightData, Passengers, get_flights, search_airport
+from fast_flights import FlightData, Passengers, get_flights
 from fast_flights import Result as RawResult
 from moneyed import CURRENCIES, Money
 
@@ -310,18 +310,6 @@ def find_flights(
 
     parsed_results.flights = filtered_flights
     return parsed_results
-
-
-def search_airports(query: str) -> str:
-    """Return a list of airports matching ``query``."""
-    query = query.lower()
-    matches = [a for a in search_airport("") if query in a.name.lower() or query in a.value.lower()]
-    if not matches:
-        return "No airports found"
-    lines = [f"{a.name.replace('_', ' ').title()} ({a.value})" for a in matches[:20]]
-    if len(matches) > 20:
-        lines.append(f"...and {len(matches) - 20} more results")
-    return "\n".join(lines)
 
 
 def main():
