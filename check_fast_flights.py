@@ -1,25 +1,177 @@
-import json
-from fast_flights import get_flights, FlightData, Passengers
+import logging
+import time
+from datetime import datetime, timedelta
+from typing import Optional
+
 from fast_flights import FlightData, Passengers, Result, get_flights
+from flight_processing import parse_flight_results
+from moneyed import Money
+
+
+def find_flights(
+    from_airport: str,
+    to_airport: str,
+    from_date: str,
+    return_date: Optional[str] = None,
+    adults: int = 1,
+    seat: str = "economy",
+    trip: str = "round-trip",
+    max_stops: int = 1,
+    max_price: Optional[int] = None,
+    max_flight_duration_hours: Optional[float] = None,
+    latest_arrival_time: Optional[str] = None,
+    max_delay_minutes: Optional[int] = None,
+):
+    if trip not in ["one-way", "round-trip"]:
+        raise ValueError("Trip type must be 'one-way' or 'round-trip'.")
+
+    if max_stops not in [0, 1]:
+        raise ValueError("max_stops can only be 0 or 1.")
+
+    from_date_obj = datetime.strptime(from_date, "%Y-%m-%d").date()
+    if from_date_obj < datetime.now().date():
+        raise ValueError("Departure date cannot be in the past.")
+
+    flight_data_list = [
+        FlightData(
+            date=from_date,
+            from_airport=from_airport,
+            to_airport=to_airport,
+            max_stops=max_stops,
+        )
+    ]
+
+    if trip == "round-trip":
+        if not return_date:
+            raise ValueError("Return date is required for a round-trip.")
+        return_date_obj = datetime.strptime(return_date, "%Y-%m-%d").date()
+        if return_date_obj < from_date_obj:
+            raise ValueError("Return date cannot be before the departure date.")
+        flight_data_list.append(
+            FlightData(
+                date=return_date,
+                from_airport=to_airport,
+                to_airport=from_airport,
+                max_stops=max_stops,
+            )
+        )
+
+    raw_result = None
+    for attempt in range(3):
+        try:
+            raw_result: Result = get_flights(
+                flight_data=flight_data_list,
+                trip=trip,
+                seat=seat,
+                passengers=Passengers(
+                    adults=adults, children=0, infants_in_seat=0, infants_on_lap=0
+                ),
+                fetch_mode="common",
+            )
+            logging.info(f"Successfully fetched flights on attempt {attempt + 1}.")
+            break
+        except RuntimeError as e:
+            logging.warning(f"Attempt {attempt + 1}/3 failed: {e}")
+            if attempt < 2:
+                time.sleep(2)
+                logging.info("Retrying...")
+            else:
+                logging.error("All retries failed.")
+                return None
+
+    if not raw_result:
+        logging.warning("No flights found that matched the initial criteria.")
+
+        return None
+
+    parsed_results = parse_flight_results(raw_result, from_date_obj)
+
+    original_flight_count = len(parsed_results.flights)
+    filtered_flights = []
+
+    latest_arrival_time_obj = (
+        datetime.strptime(latest_arrival_time, "%H:%M").time()
+        if latest_arrival_time
+        else None
+    )
+
+    for flight in parsed_results.flights:
+        if max_price is not None:
+            if flight.price:
+                max_price_money = Money(max_price, flight.price.currency)
+                if flight.price > max_price_money:
+                    logging.info(
+                        f"Filtering out flight {flight.name} due to price: {flight.price} > {max_price_money}"
+                    )
+                    continue
+            else:
+                logging.info(
+                    f"Filtering out flight {flight.name} due to missing price."
+                )
+                continue
+
+        if max_flight_duration_hours is not None and (
+            flight.duration is None
+            or flight.duration.total_seconds() / 3600 > max_flight_duration_hours
+        ):
+            duration_hours = flight.duration.total_seconds() / 3600
+            logging.info(
+                f"Filtering out flight {flight.name} due to duration: {duration_hours:.2f}h > {max_flight_duration_hours}h"
+            )
+            continue
+
+        if (
+            latest_arrival_time_obj is not None
+            and flight.arrival.time() > latest_arrival_time_obj
+        ):
+            logging.info(
+                f"Filtering out flight {flight.name} due to arrival time: {flight.arrival.time()} > {latest_arrival_time_obj}"
+            )
+            continue
+
+        if max_delay_minutes is not None and flight.delay is not None:
+            delay_minutes = flight.delay.total_seconds() / 60
+            if delay_minutes > max_delay_minutes:
+                logging.info(
+                    f"Filtering out flight {flight.name} due to delay: {delay_minutes:.2f}m > {max_delay_minutes}m"
+                )
+                continue
+
+        filtered_flights.append(flight)
+
+    logging.info(
+        f"Finished filtering flights. Original count: {original_flight_count}, Filtered count: {len(filtered_flights)}"
+    )
+
+    parsed_results.flights = filtered_flights
+    return parsed_results
+
 
 def main():
-    result: Result = get_flights(
-        flight_data=[
-            FlightData(date="2025-10-01", from_airport="TLV", to_airport="HND",
-    max_stops=2  # optional
-    ),
-            FlightData(date="2025-10-20", from_airport="HND", to_airport="TLV",
-    max_stops=2  # optional
-    )
+    today = datetime.now().date()
+    from_date = today + timedelta(days=30)
+    return_date = from_date + timedelta(days=10)
 
-        ],
-        trip="round-trip",
-        seat="economy",
-        passengers=Passengers(adults=1, children=0, infants_in_seat=0, infants_on_lap=0),
-        fetch_mode="common",
-    )
+    try:
+        result = find_flights(
+            from_airport="JFK",
+            to_airport="LAX",
+            from_date=from_date.strftime("%Y-%m-%d"),
+            return_date=return_date.strftime("%Y-%m-%d"),
+            max_stops=1,
+            max_price=2000,
+            max_flight_duration_hours=10,
+            latest_arrival_time="22:00",
+            max_delay_minutes=60,
+        )
+        if result:
+            print(result)
+    except (ValueError, RuntimeError) as e:
+        logging.error(f"Error finding flights: {e}")
 
-    print(result)
 
 if __name__ == "__main__":
-    main() 
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+    main()
