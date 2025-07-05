@@ -4,14 +4,15 @@ Test fast-flights integration with real internet API calls.
 This test makes actual HTTP requests to verify the integration works end-to-end.
 """
 import sys
-from pathlib import Path
-import pytest
 from datetime import datetime, timedelta
+from pathlib import Path
+
+import pytest
 
 # ensure package can be imported
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from fast_flights_mcp import search_airports, search_flights
+from fast_flights_mcp import search_flights
 
 
 class TestFastFlightsInternet:
@@ -116,42 +117,15 @@ class TestFastFlightsInternet:
 
         print(f"✅ Multiple passengers flight search result: {result[:200]}...")
 
-    def test_airport_search_real_api(self):
-        """Test real API call for airport search."""
-        # Test various airport search queries
-        test_cases = [
-            ("chicago", ["chicago", "CHI", "ORD", "MDW"]),
-            ("seattle", ["seattle", "SEA"]),
-            ("atlanta", ["atlanta", "ATL"]),
-            ("denver", ["denver", "DEN"]),
-        ]
-
-        for query, expected_indicators in test_cases:
-            result = search_airports.fn(query)
-            assert isinstance(result, str)
-
-            if result != "No airports found":
-                # Check if any expected indicators are present (case insensitive)
-                result_lower = result.lower()
-                found_indicator = any(
-                    indicator.lower() in result_lower
-                    for indicator in expected_indicators
-                )
-                assert (
-                    found_indicator
-                ), f"No expected indicators found for '{query}' in result: {result}"
-                print(f"✅ Airport search for '{query}': {result}")
-            else:
-                print(f"⚠️  Airport search for '{query}': No airports found")
-
     def test_error_handling_real_api(self):
         """Test error handling with real API calls."""
+        future_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
         # Test invalid airport codes
         try:
             result = search_flights.fn(
                 from_airport="INVALID",
                 to_airport="ALSOINVALID",
-                date="2025-06-01",
+                date=future_date,
                 trip="one-way",
             )
 
@@ -169,7 +143,8 @@ class TestFastFlightsInternet:
             # fast-flights throws RuntimeError for invalid routes
             assert "No flights found" in str(e)
             print(
-                f"✅ Error handling test: Correctly caught RuntimeError - {str(e)[:100]}..."
+                "✅ Error handling test: "
+                f"Correctly caught RuntimeError - {str(e)[:100]}..."
             )
 
     def test_different_seat_classes_real_api(self):
@@ -241,8 +216,8 @@ class TestFastFlightsInternet:
 
 def test_internet_connectivity():
     """Test that we can make internet requests."""
-    import urllib.request
     import urllib.error
+    import urllib.request
 
     try:
         # Simple connectivity test
@@ -278,9 +253,6 @@ if __name__ == "__main__":
 
     print("\n🔍 Testing multiple passengers...")
     test_instance.test_flight_search_real_api_multiple_passengers()
-
-    print("\n🔍 Testing airport search...")
-    test_instance.test_airport_search_real_api()
 
     print("\n🔍 Testing error handling...")
     test_instance.test_error_handling_real_api()

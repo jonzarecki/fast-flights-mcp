@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/jonzarecki/fast-flights-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/jonzarecki/fast-flights-mcp/actions/workflows/ci.yml)
 
-A Model Context Protocol (MCP) server that exposes the [fast-flights](https://pypi.org/project/fast-flights/) search library.  It provides tools for searching airports and retrieving flight information in a way that works well with Claude or other MCP clients.
+A Model Context Protocol (MCP) server that exposes the [fast-flights](https://pypi.org/project/fast-flights/) search library.  It provides a tool for searching for one‑way or round‑trip flights in a way that works well with Claude or other MCP clients.
 
 ## Installation
 
@@ -32,21 +32,20 @@ Run the server directly (stdout/stdin transport):
 fast-flights-mcp
 ```
 
-The server exposes two tools:
+The server exposes one main tool:
 
-- `search_airports(query)`: search for airport codes by name
 - `search_flights(...)`: search for one‑way or round‑trip flights
 
 With FastMCP 2.9+ you can batch tool calls for efficiency using `call_tools_bulk` or `call_tool_bulk` from this package.
 
-See the docstrings in `fast_flights_mcp.server` for full parameter details.
+See the docstrings in `fast_flights_mcp.flights` for full parameter details.
 
 For more examples see [docs/examples.md](docs/examples.md). A quick Python usage
 snippet:
 
 ```python
-from fast_flights_mcp import search_airports
-print(search_airports.fn("san"))
+from fast_flights_mcp import search_flights
+print(search_flights.fn(from_airport="JFK", to_airport="LAX", date="2025-10-01"))
 ```
 
 ## Development
