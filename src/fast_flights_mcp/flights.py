@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import time
 from dataclasses import dataclass
@@ -239,7 +240,7 @@ def find_flights(
                 trip=trip,
                 seat=seat,
                 passengers=Passengers(adults=adults, children=0, infants_in_seat=0, infants_on_lap=0),
-                fetch_mode="common",
+                fetch_mode=os.getenv("FAST_FLIGHTS_FETCH_MODE", "common"),
             )
             logging.info(f"Successfully fetched flights on attempt {attempt + 1}.")
             break

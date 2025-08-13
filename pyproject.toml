@@ -21,6 +21,10 @@ dev = [
     "pre-commit",
     "black",
     "ruff",
+]
+local = [
+    "fast-flights[local]",
+    "playwright",
 ] 
 
 [project.scripts]
