@@ -24,20 +24,43 @@ cd fast-flights-mcp
 pip install -e .
 ```
 
-### Local Mode Setup (for GDPR Compliance)
+### Fetch Modes
 
-If you're experiencing issues due to GDPR restrictions in Europe, you can use local Playwright mode:
+The package supports different fetch modes for flight data:
 
+- **`common`** (default): Uses serverless functions (fastest)
+- **`local`**: Uses local Playwright browser (slower, but more reliable in some regions)  
+- **`fallback`**: Tries serverless first, falls back to local on failure (recommended)
+- **`force-fallback`**: Always uses the fallback method
+
+### Alternative Fetch Modes
+
+If you're experiencing connection issues with the default mode, you have several options:
+
+#### Quick Fix: Use Fallback Mode
 ```bash
-# Use local mode directly with npx
-npx --yes github:jonzarecki/fast-flights-mcp --fetch-mode=local
+npx --yes github:jonzarecki/fast-flights-mcp --fetch-mode=fallback
+```
+*This tries the fast serverless method first, automatically falls back to local if needed*
+
+#### Full Local Mode Setup
+
+**Option 1: Install with Local Dependencies**
+```bash
+# Install with local dependencies (includes playwright)
+pip install -e ".[local]"
+
+# Install Playwright browser (required for local mode)
+python -m playwright install chromium
+
+# Run with local mode
+FAST_FLIGHTS_FETCH_MODE=local fast-flights-mcp
 ```
 
-Or install and setup manually:
+**Option 2: Command Line Parameter**
 ```bash
-pip install -e ".[local]"
-python -m playwright install chromium
-export FAST_FLIGHTS_FETCH_MODE=local
+# Note: Requires playwright browser to be installed separately
+npx --yes github:jonzarecki/fast-flights-mcp --fetch-mode=local
 ```
 
 ## Usage
@@ -84,12 +107,13 @@ Then run the test suite with coverage:
 pytest --cov=fast_flights_mcp --cov-report=term-missing
 ```
 
-## MCP client configuration
+## MCP Client Configuration
 
 If your MCP client supports automatic server installation, add the following JSON
 to your `mcp.json` file. The client will fetch the package via `npx` and launch
 the server for you:
 
+### Standard Mode (Default)
 ```json
 {
   "mcpServers": {
@@ -101,13 +125,30 @@ the server for you:
 }
 ```
 
-For local mode (GDPR compliance):
+### Local Mode
+*Requires local installation with playwright dependencies*
 ```json
 {
   "mcpServers": {
     "fast-flights-mcp": {
-      "command": "npx --yes github:jonzarecki/fast-flights-mcp --fetch-mode=local",
-      "env": {}
+      "command": "fast-flights-mcp",
+      "env": {
+        "FAST_FLIGHTS_FETCH_MODE": "local"
+      }
+    }
+  }
+}
+```
+
+### Fallback Mode (Best of Both)
+```json
+{
+  "mcpServers": {
+    "fast-flights-mcp": {
+      "command": "npx --yes github:jonzarecki/fast-flights-mcp",
+      "env": {
+        "FAST_FLIGHTS_FETCH_MODE": "fallback"
+      }
     }
   }
 }
