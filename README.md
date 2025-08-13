@@ -24,6 +24,22 @@ cd fast-flights-mcp
 pip install -e .
 ```
 
+### Local Mode Setup (for GDPR Compliance)
+
+If you're experiencing issues due to GDPR restrictions in Europe, you can use local Playwright mode:
+
+```bash
+# Use local mode directly with npx
+npx --yes github:jonzarecki/fast-flights-mcp --fetch-mode=local
+```
+
+Or install and setup manually:
+```bash
+pip install -e ".[local]"
+python -m playwright install chromium
+export FAST_FLIGHTS_FETCH_MODE=local
+```
+
 ## Usage
 
 Run the server directly (stdout/stdin transport):
@@ -79,6 +95,18 @@ the server for you:
   "mcpServers": {
     "fast-flights-mcp": {
       "command": "npx --yes github:jonzarecki/fast-flights-mcp",
+      "env": {}
+    }
+  }
+}
+```
+
+For local mode (GDPR compliance):
+```json
+{
+  "mcpServers": {
+    "fast-flights-mcp": {
+      "command": "npx --yes github:jonzarecki/fast-flights-mcp --fetch-mode=local",
       "env": {}
     }
   }
